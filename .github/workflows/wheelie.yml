@@ -1,0 +1,60 @@
+name: Wheelie
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build_wheels:
+    name: ${{ matrix.os }}-${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: ["ubuntu-bionic", "ubuntu-focal", "alpine-3.13"]
+        arch: ["amd64", "arm32v7", "arm64v8"]
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      - name: Set up qemu
+        run: |
+          case ${{ matrix.arch }} in
+            amd64)
+              QEMU_ARCH=
+              ;;
+            arm32v7)
+              QEMU_ARCH=arm
+              ;;
+            arm64v8)
+              QEMU_ARCH=aarch64
+              ;;
+          esac
+          if [ -n "${QEMU_ARCH}" ]; then
+            docker rm $(docker create --volume qemu-user-static:/usr/bin multiarch/qemu-user-static:${QEMU_ARCH} dummy)
+            docker run --rm --privileged --volume qemu-user-static:/usr/bin:ro multiarch/qemu-user-static:register --persistent yes
+          fi
+
+      - name: Build wheels in image
+        run: |
+          docker build -t ${{ matrix.os }}-${{ matrix.arch }} --build-arg DISTRO=$(echo ${{ matrix.os }} | sed 's|-.*||') --build-arg DISTROVER=$(echo ${{ matrix.os }} | sed 's|.*-||') --build-arg ARCH=${{ matrix.arch }} .
+          docker create --name ${{ matrix.os }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.arch }}
+          mkdir 
+          docker cp ${{ matrix.os }}-${{ matrix.arch }}:/build /build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}-artifacts
+          path: /build/*
+
+  upload_wheels:
+    name: ${{ matrix.os }}-${{ matrix.arch }}
+    needs: build_wheels
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
