@@ -8,7 +8,7 @@ on:
 
 jobs:
   build_wheels:
-    name: ${{ matrix.os }}-${{ matrix.arch }}
+    name: ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -100,3 +100,7 @@ jobs:
     steps:
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v2
+
+      - name: Do some tests
+        run: |
+          ls -al ubuntu* alpine*
