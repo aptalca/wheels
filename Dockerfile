@@ -9,11 +9,11 @@ RUN \
     echo "**** Detected Ubuntu ****" && \
     apt-get update && \
     apt-get install --no-install-recommends -y \
+      cargo \
       libffi-dev \
       libssl-dev \
       python3-dev \
-      python3-pip \
-      rustc; \
+      python3-pip; \
   else \
     echo "**** Detected Alpine ****" && \
     apk add --no-cache \
