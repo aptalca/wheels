@@ -100,3 +100,7 @@ jobs:
     steps:
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v2
+
+      - name: Do some tests
+        run: |
+          ls -al build*
