@@ -41,7 +41,7 @@ jobs:
         run: |
           docker build -t ${{ matrix.os }}-${{ matrix.arch }} --build-arg DISTRO=$(echo ${{ matrix.os }} | sed 's|-.*||') --build-arg DISTROVER=$(echo ${{ matrix.os }} | sed 's|.*-||') --build-arg ARCH=${{ matrix.arch }} .
           docker create --name ${{ matrix.os }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.arch }}
-          mkdir 
+          mkdir -p /build
           docker cp ${{ matrix.os }}-${{ matrix.arch }}:/build /build
 
       - name: Upload artifacts
@@ -51,7 +51,7 @@ jobs:
           path: /build/*
 
   upload_wheels:
-    name: ${{ matrix.os }}-${{ matrix.arch }}
+    name: Upload wheels
     needs: build_wheels
     runs-on: ubuntu-latest
     
