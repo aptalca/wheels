@@ -12,8 +12,43 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: ["ubuntu-bionic", "ubuntu-focal", "alpine-3.13"]
-        arch: ["amd64", "arm32v7", "arm64v8"]
+        include:
+          - os: ubuntu
+            distrover: bionic
+            arch: amd64
+            rust_arch: x86_64-unknown-linux-gnu
+          - os: ubuntu
+            distrover: bionic
+            arch: arm32v7
+            rust_arch: armv7-unknown-linux-gnueabihf
+          - os: ubuntu
+            distrover: bionic
+            arch: arm64v8
+            rust_arch: aarch64-unknown-linux-gnu
+          - os: ubuntu
+            distrover: focal
+            arch: amd64
+            rust_arch: x86_64-unknown-linux-gnu
+          - os: ubuntu
+            distrover: focal
+            arch: arm32v7
+            rust_arch: armv7-unknown-linux-gnueabihf
+          - os: ubuntu
+            distrover: focal
+            arch: arm64v8
+            rust_arch: aarch64-unknown-linux-gnu
+          - os: alpine
+            distrover: "3.13"
+            arch: amd64
+            rust_arch: x86_64-unknown-linux-gnu
+          - os: alpine
+            distrover: "3.13"
+            arch: arm32v7
+            rust_arch: armv7-unknown-linux-gnueabihf
+          - os: alpine
+            distrover: "3.13"
+            arch: arm64v8
+            rust_arch: aarch64-unknown-linux-gnu
 
     steps:
       - name: Check out repo
@@ -39,15 +74,15 @@ jobs:
 
       - name: Build wheels in image
         run: |
-          docker build -t ${{ matrix.os }}-${{ matrix.arch }} --build-arg DISTRO=$(echo ${{ matrix.os }} | sed 's|-.*||') --build-arg DISTROVER=$(echo ${{ matrix.os }} | sed 's|.*-||') --build-arg ARCH=${{ matrix.arch }} .
-          docker create --name ${{ matrix.os }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.arch }}
+          docker build -t ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }} --build-arg DISTRO=${{ matrix.os }} --build-arg DISTROVER=${{ matrix.distrover }} --build-arg ARCH=${{ matrix.arch }} --build-arg RUST_ARCH=${{ matrix.rust_arch }} .
+          docker create --name ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }}
           mkdir -p build
-          docker cp ${{ matrix.os }}-${{ matrix.arch }}:/build build
+          docker cp ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }}:/build build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.os }}-artifacts
+          name: ${{ matrix.os }}-${{ matrix.distrover }}-artifacts
           path: build/*
 
   upload_wheels:
