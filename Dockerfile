@@ -12,6 +12,8 @@ RUN \
       cargo \
       libffi-dev \
       libssl-dev \
+      libxml2-dev \
+      libxslt1-dev \
       python3-dev \
       python3-pip; \
   else \
@@ -21,6 +23,8 @@ RUN \
       g++ \
       gcc \
       libffi-dev \
+      libxml2-dev \
+      libxslt-dev \
       openssl-dev \
       py3-pip \
       python3-dev; \
