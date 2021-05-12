@@ -41,14 +41,14 @@ jobs:
         run: |
           docker build -t ${{ matrix.os }}-${{ matrix.arch }} --build-arg DISTRO=$(echo ${{ matrix.os }} | sed 's|-.*||') --build-arg DISTROVER=$(echo ${{ matrix.os }} | sed 's|.*-||') --build-arg ARCH=${{ matrix.arch }} .
           docker create --name ${{ matrix.os }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.arch }}
-          mkdir -p /build
-          docker cp ${{ matrix.os }}-${{ matrix.arch }}:/build /build
+          mkdir -p build
+          docker cp ${{ matrix.os }}-${{ matrix.arch }}:/build build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}-artifacts
-          path: /build/*
+          path: build/*
 
   upload_wheels:
     name: Upload wheels
