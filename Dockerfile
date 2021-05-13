@@ -6,7 +6,7 @@ FROM ghcr.io/linuxserver/baseimage-${DISTRO}:${ARCH}-${DISTROVER}
 
 ARG DISTRO
 ARG DISTROVER
-ARG PACKAGES="cryptography lxml numpy"
+ARG PACKAGES="cryptography lxml numpy PyYAML"
 
 RUN \
   if [ -f /usr/bin/apt ]; then \
