@@ -15,9 +15,9 @@ jobs:
       - name: Check for updates and trigger
         run: |
           ALLPACKAGES="cryptography lxml numpy"
+          cd docs
           for PACKAGE in ${ALLPACKAGES}; do
             VERSION=$(curl -sL "https://pypi.python.org/pypi/${PACKAGE}/json" | jq -r '. | .info.version')
-            cd docs
             for DISTRO in $(ls -d */); do
               if ! grep "${PACKAGE}-${VERSION}" "${DISTRO}index.html"; then
                 echo "**** Adding ${PACKAGE}-${VERSION} to build list ****"
