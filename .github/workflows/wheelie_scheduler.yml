@@ -20,7 +20,7 @@ jobs:
             for DISTRO in $(ls -d */); do
               IMAGE=$(echo ${DISTRO} | awk -F'-' '{print $1}')
               echo "**** IMAGE is ${IMAGE} ****"
-              TAG=$(echo ${DISTRO} | awk -F'-' '{print $2}')
+              TAG=$(echo ${DISTRO} | awk -F'-' '{print $2}' | sed 's|/||')
               echo "**** TAG is ${TAG} ****"
               docker run -d --rm --name test ghcr.io/linuxserver/baseimage-${IMAGE}:${TAG}
               docker exec test bash -c "\
