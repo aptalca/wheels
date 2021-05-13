@@ -16,22 +16,23 @@ jobs:
         run: |
           ALLPACKAGES="cryptography lxml numpy"
           cd docs
+          for DISTRO in $(ls -d */); do
+            IMAGE=$(echo ${DISTRO} | awk -F'-' '{print $1}')
+            TAG=$(echo ${DISTRO} | awk -F'-' '{print $2}' | sed 's|/||')
+            docker run -d --rm --name ${IMAGE}-${TAG} ghcr.io/linuxserver/baseimage-${IMAGE}:${TAG}
+            docker exec ${IMAGE}-${TAG} bash -c "\
+              if [ -f /usr/bin/apt ]; then \
+                apt-get update && apt-get install -y python3-pip; \
+              else \
+                apk add --no-cache py3-pip; \
+              fi && \
+              pip3 install -U pip"
+          done
           for PACKAGE in ${ALLPACKAGES}; do
             for DISTRO in $(ls -d */); do
               IMAGE=$(echo ${DISTRO} | awk -F'-' '{print $1}')
-              echo "**** IMAGE is ${IMAGE} ****"
               TAG=$(echo ${DISTRO} | awk -F'-' '{print $2}' | sed 's|/||')
-              echo "**** TAG is ${TAG} ****"
-              docker run -d --rm --name test ghcr.io/linuxserver/baseimage-${IMAGE}:${TAG}
-              docker exec test bash -c "\
-                if [ -f /usr/bin/apt ]; then \
-                  apt-get update && apt-get install -y python3-pip; \
-                else \
-                  apk add --no-cache py3-pip; \
-                fi && \
-                pip3 install -U pip"
-              VERSION=$(docker exec test bash -c "pip install ${PACKAGE}== 2>&1 | sed -rn 's|^.*versions:(.*)\).*$|\1|p' | awk -F',' '{print \$(NF)}' | sed 's|^ ||'")
-              docker stop test
+              VERSION=$(docker exec ${IMAGE}-${TAG} bash -c "pip install ${PACKAGE}== 2>&1 | sed -rn 's|^.*versions:(.*)\).*$|\1|p' | awk -F',' '{print \$(NF)}' | sed 's|^ ||'")
               if ! grep -q "${PACKAGE}-${VERSION}" "${DISTRO}index.html"; then
                 echo "**** Adding ${PACKAGE}-${VERSION} to build list ****"
                 PACKAGES="${PACKAGE} ${PACKAGES}"
@@ -40,6 +41,11 @@ jobs:
                 echo "**** ${PACKAGE}-${VERSION} is already in ${DISTRO}, skipping ****"
               fi
             done
+          done
+          for DISTRO in $(ls -d */); do
+            IMAGE=$(echo ${DISTRO} | awk -F'-' '{print $1}')
+            TAG=$(echo ${DISTRO} | awk -F'-' '{print $2}' | sed 's|/||')
+            docker stop ${IMAGE}-${TAG}
           done
           if [ -n "$PACKAGES" ]; then
             echo "**** Triggering wheelie for packages: ${PACKAGES}****"
