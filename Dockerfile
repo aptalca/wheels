@@ -1,9 +1,12 @@
 ARG DISTRO
 ARG DISTROVER
 ARG ARCH
-ARG PACKAGES="cryptography lxml numpy"
 
 FROM ghcr.io/linuxserver/baseimage-${DISTRO}:${ARCH}-${DISTROVER}
+
+ARG DISTRO
+ARG DISTROVER
+ARG PACKAGES="cryptography lxml numpy"
 
 RUN \
   if [ -f /usr/bin/apt ]; then \
