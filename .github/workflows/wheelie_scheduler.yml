@@ -31,7 +31,7 @@ jobs:
           if [ -n "$PACKAGES" ]; then
             echo "**** Triggering wheelie for packages: ${PACKAGES}****"
             curl -iX POST \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Authorization: token ${{ secrets.CR_PAT }}" \
               -H "Accept: application/vnd.github.v3+json" \
               -d "{\"ref\":\"refs/heads/main\",\"inputs\":{\"PACKAGES\":\"${PACKAGES}\"}}" \
               https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie.yml/dispatches
