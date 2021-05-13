@@ -17,7 +17,7 @@ jobs:
           ALLPACKAGES="cryptography lxml numpy"
           for PACKAGE in ${ALLPACKAGES}; do
             VERSION=$(curl -sL "https://pypi.python.org/pypi/${PACKAGE}/json" | jq -r '. | .info.version')
-            for DISTRO in $(ls -d docs/); do
+            for DISTRO in $(ls -d docs/*); do
               if ! grep "${PACKAGE}-${VERSION}" "docs/${DISTRO}/index.html"; then
                 echo "**** Adding ${PACKAGE}-${VERSION} to build list ****"
                 PACKAGES="${PACKAGES} ${PACKAGE}"
