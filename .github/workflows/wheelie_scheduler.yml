@@ -1,0 +1,39 @@
+name: Wheelie Scheduler
+
+on:
+  schedule:
+    - cron:  '00 * * * *'
+  workflow_dispatch:
+
+jobs:
+  wheelie-scheduler:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2.3.3
+
+      - name: Check for updates and trigger
+        run: |
+          ALLPACKAGES="cryptography lxml numpy"
+          for PACKAGE in ${ALLPACKAGES}; do
+            VERSION=$(curl -sL "https://pypi.python.org/pypi/${PACKAGE}/json" | jq -r '. | .info.version')
+            for DISTRO in $(ls -d docs/); do
+              if ! grep "${PACKAGE}-${VERSION}" "docs/${DISTRO}/index.html"; then
+                echo "**** Adding ${PACKAGE}-${VERSION} to build list ****"
+                PACKAGES="${PACKAGES} ${PACKAGE}"
+                break
+              else
+                echo "**** ${PACKAGE}-${VERSION} is already in ${DISTRO}, skipping ****"
+              fi
+            done
+          done
+          if [ -n "$PACKAGES" ]; then
+            echo "**** Triggering wheelie for packages: ${PACKAGES}****"
+            curl -iX POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"ref\":\"refs/heads/main\,\"inputs\":{\"PACKAGES\":\"${PACKAGES}\"}}" \
+              https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie.yml/dispatches
+          else
+            echo "**** No new updates to any of the packages, skipping trigger ****"
+          fi
