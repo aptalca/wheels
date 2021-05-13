@@ -21,7 +21,7 @@ jobs:
             for DISTRO in $(ls -d */); do
               if ! grep -q "${PACKAGE}-${VERSION}" "${DISTRO}index.html"; then
                 echo "**** Adding ${PACKAGE}-${VERSION} to build list ****"
-                PACKAGES="${PACKAGES} ${PACKAGE}"
+                PACKAGES="${PACKAGE}__${PACKAGES}"
                 break
               else
                 echo "**** ${PACKAGE}-${VERSION} is already in ${DISTRO}, skipping ****"
