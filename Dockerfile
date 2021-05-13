@@ -33,5 +33,5 @@ RUN \
   echo "**** Updating pip and building wheels ****" && \
   pip3 install -U pip setuptools wheel && \
   mkdir -p /build && \
-  pip wheel --wheel-dir=/build --find-links=/build --no-cache-dir \
+  pip wheel --wheel-dir=/build --find-links="https://wheel-index.linuxserver.io/${DISTRO}-${DISTROVER}/" --no-cache-dir \
     ${PACKAGES}
