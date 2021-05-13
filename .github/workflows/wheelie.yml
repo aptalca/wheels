@@ -95,9 +95,35 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v2
 
-      - name: Do some tests
+      - name: Upload artifacts
         run: |
-          ls -al ubuntu* alpine*
+          for distro in $(ls -d *-artifacts); do
+            for wheel in $(ls ${distro}/build/); do
+              if ! grep "${wheel}" "docs/${distro}/index.html"; then
+                echo "**** ${wheel} for ${distro} is being uploaded to aws ****"
+                aws s3 cp ${distro}/build/${wheel} s3://wheels.linuxserver.io/${distro}/${wheel} --acl public-read
+                sed -i "s|</body>|    <a href='https://wheels.linuxserver.io/${distro}/${wheel}'>${wheel}</a>\n    <br />\n\n</body>|" "docs/${distro}/index.html"
+              else
+                echo "**** ${wheel} for ${distro} already processed, skipping ****
+              fi
+            done
+          done
+          rm -rf *-artifacts
+          git config --local user.email "ci@linuxserver.io"
+          git config --local user.name "LinuxServer-CI"
+          git add . || :
+          git commit -m '[bot] Updating indices' || :
+          git push || :
