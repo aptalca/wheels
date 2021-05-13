@@ -14,7 +14,7 @@ jobs:
 
       - name: Check for updates and trigger
         run: |
-          ALLPACKAGES="apprise cryptography lxml numpy"
+          ALLPACKAGES="cryptography lxml numpy PyYAML"
           cd docs
           for DISTRO in $(ls -d */); do
             IMAGE=$(echo ${DISTRO} | awk -F'-' '{print $1}')
