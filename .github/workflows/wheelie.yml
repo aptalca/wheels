@@ -2,6 +2,8 @@ name: Wheelie
 
 on:
   workflow_dispatch:
+    inputs:
+      PACKAGES:
 
 jobs:
   build_wheels:
@@ -78,7 +80,7 @@ jobs:
 
       - name: Build wheels in image
         run: |
-          docker build -t ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }} --build-arg DISTRO=${{ matrix.os }} --build-arg DISTROVER=${{ matrix.distrover }} --build-arg ARCH=${{ matrix.arch }} .
+          docker build -t ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }} --build-arg DISTRO=${{ matrix.os }} --build-arg DISTROVER=${{ matrix.distrover }} --build-arg ARCH=${{ matrix.arch }} --build-arg PACKAGES=${{ github.event.inputs.PACKAGES }} .
           docker create --name ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }}
           mkdir -p build
           docker cp ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }}:/build build
