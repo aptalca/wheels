@@ -88,7 +88,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.os }}-${{ matrix.distrover }}-artifacts
+          name: ${{ matrix.os }}-artifacts
           path: build/*
 
   upload_wheels:
@@ -113,14 +113,14 @@ jobs:
       - name: Upload artifacts
         run: |
           for artifactfolder in $(ls -d *-artifacts); do
-            distro=$(echo ${artifactfolder} | sed 's|-artifacts||')
+            os=$(echo ${artifactfolder} | awk -F'-' '{print $1}')
             for wheel in $(ls ${artifactfolder}/build/); do
-              if ! grep -q "${wheel}" "docs/${distro}/index.html" && ! echo "${wheel}" | grep -q "none-any"; then
-                echo "**** ${wheel} for ${distro} is being uploaded to aws ****"
-                aws s3 cp ${artifactfolder}/build/${wheel} s3://wheels.linuxserver.io/${distro}/${wheel} --acl public-read
-                sed -i "s|</body>|    <a href='https://wheels.linuxserver.io/${distro}/${wheel}'>${wheel}</a>\n    <br />\n\n</body>|" "docs/${distro}/index.html"
+              if ! grep -q "${wheel}" "docs/${os}/index.html" && ! echo "${wheel}" | grep -q "none-any"; then
+                echo "**** ${wheel} for ${os} is being uploaded to aws ****"
+                aws s3 cp ${artifactfolder}/build/${wheel} s3://wheels.linuxserver.io/${os}/${wheel} --acl public-read
+                sed -i "s|</body>|    <a href='https://wheels.linuxserver.io/${os}/${wheel}'>${wheel}</a>\n    <br />\n\n</body>|" "docs/${os}/index.html"
               else
-                echo "**** ${wheel} for ${distro} already processed, skipping ****"
+                echo "**** ${wheel} for ${os} already processed, skipping ****"
               fi
             done
           done
