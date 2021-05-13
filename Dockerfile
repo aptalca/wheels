@@ -1,6 +1,7 @@
 ARG DISTRO
 ARG DISTROVER
 ARG ARCH
+ARG PACKAGES="cryptography lxml numpy"
 
 FROM ghcr.io/linuxserver/baseimage-${DISTRO}:${ARCH}-${DISTROVER}
 
@@ -33,8 +34,4 @@ RUN \
   pip3 install -U pip setuptools wheel && \
   mkdir -p /build && \
   pip wheel --wheel-dir=/build --find-links=/build --no-cache-dir \
-    cryptography \
-    lxml \
-    numpy
-  
-    
+    ${PACKAGES}
