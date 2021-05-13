@@ -111,7 +111,7 @@ jobs:
       - name: Upload artifacts
         run: |
           for artifactfolder in $(ls -d *-artifacts); do
-            distro=$(echo ${artifactfolder} | sed 's|-artifact||')
+            distro=$(echo ${artifactfolder} | sed 's|-artifacts||')
             for wheel in $(ls ${artifactfolder}/build/); do
               if ! grep "${wheel}" "docs/${distro}/index.html"; then
                 echo "**** ${wheel} for ${distro} is being uploaded to aws ****"
