@@ -21,7 +21,7 @@ jobs:
             for DISTRO in $(ls -d */); do
               if ! grep -q "${PACKAGE}-${VERSION}" "${DISTRO}index.html"; then
                 echo "**** Adding ${PACKAGE}-${VERSION} to build list ****"
-                PACKAGES="${PACKAGE}__${PACKAGES}"
+                PACKAGES="${PACKAGE}==${VERSION} ${PACKAGES}"
                 break
               else
                 echo "**** ${PACKAGE}-${VERSION} is already in ${DISTRO}, skipping ****"
@@ -31,9 +31,9 @@ jobs:
           if [ -n "$PACKAGES" ]; then
             echo "**** Triggering wheelie for packages: ${PACKAGES}****"
             curl -iX POST \
-              -H "Authorization: token ${{ secrets.CR_PAT }}" \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github.v3+json" \
-              -d "{\"ref\":\"refs/heads/main\,\"inputs\":{\"PACKAGES\":\"${PACKAGES}\"}}" \
+              -d "{\"ref\":\"refs/heads/main\",\"inputs\":{\"PACKAGES\":\"${PACKAGES}\"}}" \
               https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie.yml/dispatches
           else
             echo "**** No new updates to any of the packages, skipping trigger ****"
