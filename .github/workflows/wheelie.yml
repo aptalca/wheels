@@ -117,7 +117,7 @@ jobs:
                 aws s3 cp ${distro}/build/${wheel} s3://wheels.linuxserver.io/${distro}/${wheel} --acl public-read
                 sed -i "s|</body>|    <a href='https://wheels.linuxserver.io/${distro}/${wheel}'>${wheel}</a>\n    <br />\n\n</body>|" "docs/${distro}/index.html"
               else
-                echo "**** ${wheel} for ${distro} already processed, skipping ****
+                echo "**** ${wheel} for ${distro} already processed, skipping ****"
               fi
             done
           done
