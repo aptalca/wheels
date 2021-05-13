@@ -33,6 +33,8 @@ RUN \
   pip3 install -U pip setuptools wheel && \
   mkdir -p /build && \
   pip wheel --wheel-dir=/build --find-links=/build --no-cache-dir \
-    cffi
+    cryptography \
+    lxml \
+    numpy
   
     
