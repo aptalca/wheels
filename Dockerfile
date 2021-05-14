@@ -6,7 +6,9 @@ FROM ghcr.io/linuxserver/baseimage-${DISTRO}:${ARCH}-${DISTROVER}
 
 ARG DISTRO
 ARG DISTROVER
-ARG PACKAGES="cryptography lxml numpy PyYAML"
+ARG PACKAGES
+
+COPY packages.txt /packages.txt
 
 RUN \
   if [ -f /usr/bin/apt ]; then \
@@ -36,5 +38,8 @@ RUN \
   echo "**** Updating pip and building wheels ****" && \
   pip3 install -U pip setuptools wheel && \
   mkdir -p /build && \
+  if [ -z "${PACKAGES}" ]; then \
+    PACKAGES=$(cat /packages.txt); \
+  fi && \
   pip wheel --wheel-dir=/build --find-links="https://wheel-index.linuxserver.io/${DISTRO}/" --no-cache-dir \
     ${PACKAGES}
