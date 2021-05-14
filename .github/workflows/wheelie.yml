@@ -6,39 +6,28 @@ on:
       PACKAGES:
 
 jobs:
+
+  distro_matrix:
+    name: Set up the distro matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      - id: set-matrix
+        run:  echo "::set-output name=matrix::$(cat distros.txt | jq -nRjc '[inputs | .]')"
+
   build_wheels:
-    name: ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }}
+    name: ${{ matrix.os }}-${{ matrix.arch }}
+    needs: distro_matrix
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - os: ubuntu
-            distrover: bionic
-            arch: amd64
-          - os: ubuntu
-            distrover: bionic
-            arch: arm32v7
-          - os: ubuntu
-            distrover: bionic
-            arch: arm64v8
-          - os: ubuntu
-            distrover: focal
-            arch: amd64
-          - os: ubuntu
-            distrover: focal
-            arch: arm32v7
-          - os: ubuntu
-            distrover: focal
-            arch: arm64v8
-          - os: alpine
-            distrover: "3.13"
-            arch: amd64
-          - os: alpine
-            distrover: "3.13"
-            arch: arm32v7
-          - os: alpine
-            distrover: "3.13"
-            arch: arm64v8
+        os: ${{fromJSON(needs.distro_matrix.outputs.matrix)}}
+        arch: [amd64, arm32v7, arm64v8]
+
 
     steps:
       - name: Check out repo
@@ -80,10 +69,12 @@ jobs:
 
       - name: Build wheels in image
         run: |
-          docker build -t ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }} --build-arg DISTRO=${{ matrix.os }} --build-arg DISTROVER=${{ matrix.distrover }} --build-arg ARCH=${{ matrix.arch }} --build-arg PACKAGES="${{ github.event.inputs.PACKAGES }}" .
-          docker create --name ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }}
+          DISTRO=$(echo ${{ matrix.os }} | | awk -F'-' '{print $1}')
+          DISTROVER=$(echo ${{ matrix.os }} | | awk -F'-' '{print $2}')
+          docker build -t ${{ matrix.os }}-${{ matrix.arch }} --build-arg DISTRO=${DISTRO} --build-arg DISTROVER=${DISTROVER} --build-arg ARCH=${{ matrix.arch }} --build-arg PACKAGES="${{ github.event.inputs.PACKAGES }}" .
+          docker create --name ${{ matrix.os }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.arch }}
           mkdir -p build
-          docker cp ${{ matrix.os }}-${{ matrix.distrover }}-${{ matrix.arch }}:/build build
+          docker cp ${{ matrix.os }}-${{ matrix.arch }}:/build build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
@@ -112,19 +103,25 @@ jobs:
 
       - name: Upload artifacts
         run: |
-          for artifactfolder in $(ls -d *-artifacts); do
-            os=$(echo ${artifactfolder} | awk -F'-' '{print $1}')
-            for wheel in $(ls ${artifactfolder}/build/); do
+          mkdir -p alpine ubuntu
+          for artifactfolder in $(ls -d alpine-*-artifacts); do
+            mv -f ${artifactfolder}/build/* alpine/
+          done
+          for artifactfolder in $(ls -d ubuntu-*-artifacts); do
+            mv -f ${artifactfolder}/build/* ubuntu/
+          done
+          for os in ubuntu alpine; do
+            for wheel in $(ls ${os}/); do
               if ! grep -q "${wheel}" "docs/${os}/index.html" && ! echo "${wheel}" | grep -q "none-any"; then
                 echo "**** ${wheel} for ${os} is being uploaded to aws ****"
-                aws s3 cp ${artifactfolder}/build/${wheel} s3://wheels.linuxserver.io/${os}/${wheel} --acl public-read
+                aws s3 cp ${os}/${wheel} s3://wheels.linuxserver.io/${os}/${wheel} --acl public-read
                 sed -i "s|</body>|    <a href='https://wheels.linuxserver.io/${os}/${wheel}'>${wheel}</a>\n    <br />\n\n</body>|" "docs/${os}/index.html"
               else
                 echo "**** ${wheel} for ${os} already processed, skipping ****"
               fi
             done
           done
-          rm -rf *-artifacts
+          rm -rf *-artifacts ubuntu alpine
           git config --local user.email "ci@linuxserver.io"
           git config --local user.name "LinuxServer-CI"
           git add . || :
