@@ -44,12 +44,20 @@ jobs:
             done
           done
           if [ -n "$PACKAGES" ]; then
-            echo "**** Triggering wheelie for packages: ${PACKAGES}****"
-            curl -iX POST \
+            response=$(curl \
               -H "Authorization: token ${{ secrets.CR_PAT }}" \
               -H "Accept: application/vnd.github.v3+json" \
-              -d "{\"ref\":\"refs/heads/main\",\"inputs\":{\"PACKAGES\":\"${PACKAGES}\"}}" \
-              https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie.yml/dispatches
+              https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie.yml/runs)
+            if echo "${response}" | jq -r '.workflow_runs[].conclusion' | grep -q null; then
+              echo "**** New packages are available but there is already an active Wheelie build, skipping ****"
+            else            
+              echo "**** Triggering wheelie for packages: ${PACKAGES}****"
+              curl -iX POST \
+                -H "Authorization: token ${{ secrets.CR_PAT }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                -d "{\"ref\":\"refs/heads/main\",\"inputs\":{\"PACKAGES\":\"${PACKAGES}\"}}" \
+                https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie.yml/dispatches
+            fi
           else
             echo "**** No new updates to any of the packages, skipping trigger ****"
           fi
