@@ -1,1 +1,4 @@
+cryptography
+lxml
+numpy
 PyYAML
