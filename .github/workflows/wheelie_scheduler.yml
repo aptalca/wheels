@@ -38,7 +38,7 @@ jobs:
                 PACKAGES="${PACKAGE} ${PACKAGES}"
                 break
               else
-                echo "**** ${PACKAGE}-${VERSION} is already in ${DISTRO}, skipping ****"
+                echo "**** ${PACKAGE}-${VERSION} wheel already built for ${DISTRO}, skipping ****"
               fi
             done
           done
