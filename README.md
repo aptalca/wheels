@@ -1,6 +1,6 @@
 # Wheelie
 
-This repo builds and uploads wheels for commonly used pip packages.
+This repo builds and uploads wheels for pip packages commonly used in linuxserver.io images.
 
 The wheel index is located at https://wheel-index.linuxserver.io
 The wheels are downloaded from https://wheels.linuxserver.io
