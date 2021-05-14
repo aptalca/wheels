@@ -14,11 +14,11 @@ jobs:
 
       - name: Check for updates and trigger
         run: |
-          ALLPACKAGES="cryptography lxml numpy PyYAML"
-          cd docs
-          for DISTRO in $(ls -d */); do
+          ALLPACKAGES=$(cat packages.txt)
+          DISTROS=$(cat distros.txt)
+          for DISTRO in ${DISTROS}; do
             IMAGE=$(echo ${DISTRO} | awk -F'-' '{print $1}')
-            TAG=$(echo ${DISTRO} | awk -F'-' '{print $2}' | sed 's|/||')
+            TAG=$(echo ${DISTRO} | awk -F'-' '{print $2}')
             docker run -d --rm --name ${IMAGE}-${TAG} ghcr.io/linuxserver/baseimage-${IMAGE}:${TAG}
             docker exec ${IMAGE}-${TAG} bash -c "\
               if [ -f /usr/bin/apt ]; then \
@@ -29,11 +29,11 @@ jobs:
               pip3 install -U pip"
           done
           for PACKAGE in ${ALLPACKAGES}; do
-            for DISTRO in $(ls -d */); do
+            for DISTRO in ${DISTROS}; do
               IMAGE=$(echo ${DISTRO} | awk -F'-' '{print $1}')
-              TAG=$(echo ${DISTRO} | awk -F'-' '{print $2}' | sed 's|/||')
+              TAG=$(echo ${DISTRO} | awk -F'-' '{print $2}')
               VERSION=$(docker exec ${IMAGE}-${TAG} bash -c "pip install ${PACKAGE}== 2>&1 | sed -rn 's|^.*versions:(.*)\).*$|\1|p' | awk -F',' '{print \$(NF)}' | sed 's|^ ||'")
-              if ! grep -q "${PACKAGE}-${VERSION}" "${DISTRO}index.html"; then
+              if ! grep -q "${PACKAGE}-${VERSION}" "docs/${IMAGE}/index.html"; then
                 echo "**** Adding ${PACKAGE}-${VERSION} to build list ****"
                 PACKAGES="${PACKAGE} ${PACKAGES}"
                 break
@@ -41,11 +41,6 @@ jobs:
                 echo "**** ${PACKAGE}-${VERSION} is already in ${DISTRO}, skipping ****"
               fi
             done
-          done
-          for DISTRO in $(ls -d */); do
-            IMAGE=$(echo ${DISTRO} | awk -F'-' '{print $1}')
-            TAG=$(echo ${DISTRO} | awk -F'-' '{print $2}' | sed 's|/||')
-            docker stop ${IMAGE}-${TAG}
           done
           if [ -n "$PACKAGES" ]; then
             echo "**** Triggering wheelie for packages: ${PACKAGES}****"
