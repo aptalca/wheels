@@ -31,6 +31,7 @@ RUN \
       libffi-dev \
       libxml2-dev \
       libxslt-dev \
+      make \
       openssl-dev \
       py3-pip \
       python3-dev; \
