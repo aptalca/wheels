@@ -20,6 +20,7 @@ RUN \
       libssl-dev \
       libxml2-dev \
       libxslt1-dev \
+      make \
       python3-dev \
       python3-pip; \
   else \
