@@ -16,6 +16,7 @@ RUN \
     apt-get update && \
     apt-get install --no-install-recommends -y \
       cargo \
+      g++ \
       libffi-dev \
       libssl-dev \
       libxml2-dev \
@@ -36,9 +37,13 @@ RUN \
       openssl-dev \
       py3-pip \
       python3-dev; \
-  fi && \
+  fi
+
+RUN \
   echo "**** Updating pip and building wheels ****" && \
-  pip3 install -U pip setuptools wheel && \
+  pip3 install -U pip setuptools wheel
+
+RUN \
   mkdir -p /build && \
   if [ -z "${PACKAGES}" ]; then \
     PACKAGES=$(cat /packages.txt); \

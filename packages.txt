@@ -1,4 +1,5 @@
 cryptography
+gevent
 lxml
 numpy
 PyNaCl
