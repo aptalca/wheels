@@ -18,25 +18,29 @@ RUN \
       cargo \
       g++ \
       libffi-dev \
+      libjpeg-dev \
       libssl-dev \
       libxml2-dev \
       libxslt1-dev \
       make \
       python3-dev \
-      python3-pip; \
+      python3-pip \
+      zlib1g-dev; \
   else \
     echo "**** Detected Alpine ****" && \
     apk add --no-cache \
       cargo \
       g++ \
       gcc \
+      jpeg-dev \
       libffi-dev \
       libxml2-dev \
       libxslt-dev \
       make \
       openssl-dev \
       py3-pip \
-      python3-dev; \
+      python3-dev \
+      zlib-dev; \
   fi
 
 RUN \
