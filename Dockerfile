@@ -17,6 +17,7 @@ RUN \
     apt-get install --no-install-recommends -y \
       cargo \
       g++ \
+      libatlas-base-dev \
       libffi-dev \
       libjpeg-dev \
       libssl-dev \
@@ -29,14 +30,17 @@ RUN \
   else \
     echo "**** Detected Alpine ****" && \
     apk add --no-cache \
+      blas-dev \
       cargo \
       g++ \
       gcc \
       jpeg-dev \
+      lapack-dev \
       libffi-dev \
       libxml2-dev \
       libxslt-dev \
       make \
+      openblas-dev \
       openssl-dev \
       py3-pip \
       python3-dev \

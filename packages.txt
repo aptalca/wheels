@@ -6,3 +6,5 @@ pandas
 Pillow
 PyNaCl
 PyYAML
+scikit-learn
+scipy
