@@ -52,7 +52,7 @@ jobs:
 
       - name: Build wheels in image
         run: |
-          docker build -t ${{ matrix.arch }} --build-arg ARCH=${{ matrix.arch }} .
+          docker build -t ${{ matrix.arch }} --build-arg ARCH=${{ matrix.arch }} -f Dockerfile.homeassistant .
           docker create --name ${{ matrix.arch }} ${{ matrix.arch }}
           mkdir -p build
           docker cp ${{ matrix.arch }}:/build build
