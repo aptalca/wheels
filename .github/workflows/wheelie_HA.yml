@@ -5,6 +5,32 @@ on:
 
 jobs:
 
+  grab_requirements:
+    name: Grab requirements
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Curl in requirements
+        run: |
+          export HASS_RELEASE=$(curl -sfX GET https://api.github.com/repos/home-assistant/core/releases/latest \
+            | jq -r .tag_name)
+          echo "HASS_RELEASE is ${HASS_RELEASE}"
+          export HASS_BASE=$(curl -sfL https://raw.githubusercontent.com/home-assistant/core/${HASS_RELEASE}/build.json \
+            | jq -r .build_from.amd64 \
+            | cut -d: -f2)
+          echo "HASS_BASE is ${HASS_BASE}"
+          echo "Downloading upstream requirements files. . ."
+          mkdir -p upstream
+          curl -sfL https://raw.githubusercontent.com/home-assistant/core/${HASS_RELEASE}/requirements.txt -o upstream/requirements.txt
+          curl -sfL https://raw.githubusercontent.com/home-assistant/core/${HASS_RELEASE}/requirements_all.txt -o upstream/requirements_all.txt
+          curl -sfL https://raw.githubusercontent.com/home-assistant/docker/${HASS_BASE}/requirements.txt -o upstream/requirements_base.txt
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: upstream/*
+
   build_wheels:
     name: ${{ matrix.arch }}
     runs-on: ubuntu-latest
@@ -87,6 +113,7 @@ jobs:
         run: |
           mkdir -p alpine
           mv -f artifacts/build/* alpine/
+          mv -f artifacts/upstream/* HA-reqs/
           os="alpine"
           for wheel in $(ls ${os}/); do
             if ! grep -q "${wheel}" "docs/${os}/index.html" && ! echo "${wheel}" | grep -q "none-any"; then
@@ -97,9 +124,17 @@ jobs:
               echo "**** ${wheel} for ${os} already processed, skipping ****"
             fi
           done
-          rm -rf *-artifacts ubuntu alpine
+          rm -rf artifacts alpine
           git config --local user.email "ci@linuxserver.io"
           git config --local user.name "LinuxServer-CI"
           git add . || :
-          git commit -m '[bot] Updating indices' || :
+          git commit -m '[bot] Updating HA indices and requirements files' || :
           git push || :
+
+      - name: Trigger HomeAssistant scheduler
+        run: |
+          curl -iX POST \
+            -H "Authorization: token ${{ secrets.CR_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d "{\"ref\":\"refs/heads/main\"}" \
+            https://api.github.com/repos/linuxserver/docker-homeassistant/actions/workflows/external_trigger_scheduler.yml/dispatches

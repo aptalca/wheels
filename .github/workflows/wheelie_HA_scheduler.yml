@@ -1,0 +1,58 @@
+name: Wheelie_HA Scheduler
+
+on:
+  schedule:
+    - cron:  '20 * * * *'
+  workflow_dispatch:
+
+jobs:
+  wheelie-HA-scheduler:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2.3.3
+
+      - name: Check for updates and trigger
+        run: |
+          export HASS_RELEASE=$(curl -sfX GET https://api.github.com/repos/home-assistant/core/releases/latest \
+            | jq -r .tag_name)
+          echo "HASS_RELEASE is ${HASS_RELEASE}"
+          export HASS_BASE=$(curl -sfL https://raw.githubusercontent.com/home-assistant/core/${HASS_RELEASE}/build.json \
+            | jq -r .build_from.amd64 \
+            | cut -d: -f2)
+          echo "HASS_BASE is ${HASS_BASE}"
+          echo "Downloading upstream requirements files. . ."
+          mkdir -p upstream
+          curl -sfL https://raw.githubusercontent.com/home-assistant/core/${HASS_RELEASE}/requirements.txt -o upstream/requirements.txt
+          curl -sfL https://raw.githubusercontent.com/home-assistant/core/${HASS_RELEASE}/requirements_all.txt -o upstream/requirements_all.txt
+          curl -sfL https://raw.githubusercontent.com/home-assistant/docker/${HASS_BASE}/requirements.txt -o upstream/requirements_base.txt
+          echo "Comparing local files to upstream. . ."
+          CURRENT_HASH=$(grep -hs ^ HA-reqs/* | md5sum | cut -c1-8)
+          NEW_HASH=$(grep -hs ^ upstream/* | md5sum | cut -c1-8)
+          if [ ${CURRENT_HASH} != ${NEW_HASH} ]; then
+            response=$(curl \
+              -H "Authorization: token ${{ secrets.CR_PAT }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie.yml/runs)
+            response2=$(curl \
+              -H "Authorization: token ${{ secrets.CR_PAT }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie_HA.yml/runs)
+            if echo "${response}" | jq -r '.workflow_runs[].conclusion' | grep -q null || echo "${response2}" | jq -r '.workflow_runs[].conclusion' | grep -q null; then
+              echo "**** Changes to requirements files detected but there is already an active Wheelie build, skipping ****"
+            else            
+              echo "**** Triggering wheelie for HomeAssistant****"
+              curl -iX POST \
+                -H "Authorization: token ${{ secrets.CR_PAT }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                -d "{\"ref\":\"refs/heads/main\"}" \
+                https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie_HA.yml/dispatches
+            fi
+          else
+            echo "**** No changes to the requirements files, skipping wheelie trigger, but triggering docker-homeassistant trigger ****"
+            curl -iX POST \
+              -H "Authorization: token ${{ secrets.CR_PAT }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "{\"ref\":\"refs/heads/main\"}" \
+              https://api.github.com/repos/linuxserver/docker-homeassistant/actions/workflows/external_trigger_scheduler.yml/dispatches
+          fi
