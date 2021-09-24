@@ -1,0 +1,104 @@
+name: Wheelie_HA
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build_wheels:
+    name: ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm32v7, arm64v8]
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      # https://github.com/crazy-max/ghaction-docker-buildx/issues/172
+      - name: Hack Docker FS to Build cryptography on armv6/armv7
+        run: |
+          df -h
+          sudo swapon --show
+          sudo dd if=/dev/zero of=/swapfile1 bs=1M count=6K 
+          sudo chmod 600 /swapfile1
+          sudo mkswap /swapfile1
+          sudo swapon /swapfile1
+          sudo swapon --show
+          sudo free -h
+          sudo systemctl stop docker
+          sudo mount -t tmpfs -o size=9G tmpfs /var/lib/docker
+          df -h
+          sudo systemctl start docker
+
+      - name: Set up qemu
+        run: |
+          case ${{ matrix.arch }} in
+            amd64)
+              QEMU_ARCH=
+              ;;
+            arm32v7)
+              QEMU_ARCH=arm
+              ;;
+            arm64v8)
+              QEMU_ARCH=aarch64
+              ;;
+          esac
+          if [ -n "${QEMU_ARCH}" ]; then
+            docker rm $(docker create --volume qemu-user-static:/usr/bin multiarch/qemu-user-static:${QEMU_ARCH} dummy)
+            docker run --rm --privileged --volume qemu-user-static:/usr/bin:ro multiarch/qemu-user-static:register --persistent yes
+          fi
+
+      - name: Build wheels in image
+        run: |
+          docker build -t ${{ matrix.arch }} --build-arg ARCH=${{ matrix.arch }} .
+          docker create --name ${{ matrix.arch }} ${{ matrix.arch }}
+          mkdir -p build
+          docker cp ${{ matrix.arch }}:/build build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: build/*
+
+  upload_wheels:
+    name: Upload wheels
+    needs: build_wheels
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Upload artifacts
+        run: |
+          mkdir -p alpine
+          mv -f artifacts/build/* alpine/
+          os="alpine"
+          for wheel in $(ls ${os}/); do
+            if ! grep -q "${wheel}" "docs/${os}/index.html" && ! echo "${wheel}" | grep -q "none-any"; then
+              echo "**** ${wheel} for ${os} is being uploaded to aws ****"
+              #aws s3 cp ${os}/${wheel} s3://wheels.linuxserver.io/${os}/${wheel} --acl public-read
+              sed -i "s|</body>|    <a href='https://wheels.linuxserver.io/${os}/${wheel}'>${wheel}</a>\n    <br />\n\n</body>|" "docs/${os}/index.html"
+            else
+              echo "**** ${wheel} for ${os} already processed, skipping ****"
+            fi
+          done
+          rm -rf *-artifacts ubuntu alpine
+          #git config --local user.email "ci@linuxserver.io"
+          #git config --local user.name "LinuxServer-CI"
+          #git add . || :
+          #git commit -m '[bot] Updating indices' || :
+          #git push || :
