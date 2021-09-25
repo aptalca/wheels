@@ -70,7 +70,7 @@ RUN \
   mkdir -p /build && \
   cd /tmp/core && \
   pip wheel --wheel-dir=/build --find-links="https://wheel-index.linuxserver.io/alpine/" --find-links="https://wheel-index.linuxserver.io/homeassistant/" --no-cache-dir \
-    pycocotools==2.0.1
+    grpcio==1.31.0
   #  homeassistant==${HASS_RELEASE} && \
   #pip wheel --wheel-dir=/build --find-links="https://wheel-index.linuxserver.io/alpine/" --find-links="https://wheel-index.linuxserver.io/homeassistant/" --no-cache-dir \
   #  -r requirements_all.txt && \
