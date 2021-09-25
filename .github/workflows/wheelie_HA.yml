@@ -112,7 +112,7 @@ jobs:
         run: |
           mkdir -p homeassistant
           mv -f artifacts/build/* homeassistant/
-          mv -f artifacts/upstream/* HA-reqs/
+          mv -f artifacts/requirement*.txt HA-reqs/
           os="homeassistant"
           for wheel in $(ls ${os}/); do
             if ! grep -q "${wheel}" "docs/${os}/index.html"; then
