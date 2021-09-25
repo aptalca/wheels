@@ -54,5 +54,5 @@ jobs:
               -H "Authorization: token ${{ secrets.CR_PAT }}" \
               -H "Accept: application/vnd.github.v3+json" \
               -d "{\"ref\":\"refs/heads/main\"}" \
-              https://api.github.com/repos/linuxserver/docker-homeassistant/actions/workflows/external_trigger_scheduler.yml/dispatches
+              https://api.github.com/repos/linuxserver/docker-homeassistant/actions/workflows/external_trigger.yml/dispatches
           fi
