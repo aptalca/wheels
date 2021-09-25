@@ -82,7 +82,6 @@ jobs:
           docker create --name ${{ matrix.arch }} ${{ matrix.arch }}
           mkdir -p build
           docker cp ${{ matrix.arch }}:/build build
-          rm -rf build/*none-any.whl
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
@@ -111,12 +110,12 @@ jobs:
 
       - name: Upload artifacts
         run: |
-          mkdir -p alpine
-          mv -f artifacts/build/* alpine/
+          mkdir -p homeassistant
+          mv -f artifacts/build/* homeassistant/
           mv -f artifacts/upstream/* HA-reqs/
-          os="alpine"
+          os="homeassistant"
           for wheel in $(ls ${os}/); do
-            if ! grep -q "${wheel}" "docs/${os}/index.html" && ! echo "${wheel}" | grep -q "none-any"; then
+            if ! grep -q "${wheel}" "docs/${os}/index.html"; then
               echo "**** ${wheel} for ${os} is being uploaded to aws ****"
               aws s3 cp ${os}/${wheel} s3://wheels.linuxserver.io/${os}/${wheel} --acl public-read
               sed -i "s|</body>|    <a href='https://wheels.linuxserver.io/${os}/${wheel}'>${wheel}</a>\n    <br />\n\n</body>|" "docs/${os}/index.html"
@@ -124,7 +123,7 @@ jobs:
               echo "**** ${wheel} for ${os} already processed, skipping ****"
             fi
           done
-          rm -rf artifacts alpine
+          rm -rf artifacts homeassistant
           git config --local user.email "ci@linuxserver.io"
           git config --local user.name "LinuxServer-CI"
           git add . || :

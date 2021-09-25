@@ -48,7 +48,11 @@ jobs:
               -H "Authorization: token ${{ secrets.CR_PAT }}" \
               -H "Accept: application/vnd.github.v3+json" \
               https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie.yml/runs)
-            if echo "${response}" | jq -r '.workflow_runs[].conclusion' | grep -q null; then
+            response2=$(curl \
+              -H "Authorization: token ${{ secrets.CR_PAT }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie_HA.yml/runs)
+            if echo "${response}" | jq -r '.workflow_runs[].conclusion' | grep -q null || echo "${response2}" | jq -r '.workflow_runs[].conclusion' | grep -q null; then
               echo "**** New packages are available but there is already an active Wheelie build, skipping ****"
             else            
               echo "**** Triggering wheelie for packages: ${PACKAGES}****"
