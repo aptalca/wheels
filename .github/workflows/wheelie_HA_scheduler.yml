@@ -40,13 +40,23 @@ jobs:
               https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie_HA.yml/runs)
             if echo "${response}" | jq -r '.workflow_runs[].conclusion' | grep -q null || echo "${response2}" | jq -r '.workflow_runs[].conclusion' | grep -q null; then
               echo "**** Changes to requirements files detected but there is already an active Wheelie build, skipping ****"
+              echo "**** Notifying Discord ****"
+              FAILURE_REASON="Changes to HomeAssistant wheel requirements detected, but a wheelie build is already active, skipping for now."
+              curl -X POST -H "Content-Type: application/json" --data '{"avatar_url": "https://cdn.discordapp.com/avatars/354986384542662657/df91181b3f1cf0ef1592fbe18e0962d7.png","embeds": [{"color": 9802903,
+                "description": "**Trigger Failed** \n**Reason:** '"${FAILURE_REASON}"' \n"}],
+                "username": "Github Actions"}' ${{ secrets.DISCORD_WEBHOOK }}
             else            
-              echo "**** Triggering wheelie for HomeAssistant****"
+              echo "**** Triggering wheelie for HomeAssistant ****"
               curl -iX POST \
                 -H "Authorization: token ${{ secrets.CR_PAT }}" \
                 -H "Accept: application/vnd.github.v3+json" \
                 -d "{\"ref\":\"refs/heads/main\"}" \
                 https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie_HA.yml/dispatches
+              echo "**** Notifying discord ****"
+              TRIGGER_REASON="Changes to HomeAssistant wheel requirements detected, triggering wheelie."
+              curl -X POST -H "Content-Type: application/json" --data '{"avatar_url": "https://cdn.discordapp.com/avatars/354986384542662657/df91181b3f1cf0ef1592fbe18e0962d7.png","embeds": [{"color": 9802903,
+                "description": "**Build Triggered** \n**Reason:** '"${TRIGGER_REASON}"' \n**Build URL:** '"https://github.com/aptalca/wheels/actions/workflows/wheelie_HA.yml"' \n"}],
+                "username": "Github Actions"}' ${{ secrets.DISCORD_WEBHOOK }}
             fi
           else
             echo "**** No changes to the requirements files, skipping wheelie trigger, but triggering docker-homeassistant trigger ****"

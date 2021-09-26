@@ -132,8 +132,14 @@ jobs:
 
       - name: Trigger HomeAssistant scheduler
         run: |
+          echo "**** Triggering HA trigger ****"
           curl -iX POST \
             -H "Authorization: token ${{ secrets.CR_PAT }}" \
             -H "Accept: application/vnd.github.v3+json" \
             -d "{\"ref\":\"refs/heads/main\"}" \
             https://api.github.com/repos/linuxserver/docker-homeassistant/actions/workflows/external_trigger.yml/dispatches
+          echo "**** Notifying Discord ****"
+          TRIGGER_REASON="A new set of wheels built for HomeAssistant. Triggering HA trigger."
+          curl -X POST -H "Content-Type: application/json" --data '{"avatar_url": "https://cdn.discordapp.com/avatars/354986384542662657/df91181b3f1cf0ef1592fbe18e0962d7.png","embeds": [{"color": 9802903,
+            "description": "**Build Triggered** \n**Reason:** '"${TRIGGER_REASON}"' \n**Build URL:** '"https://github.com/linuxserver/docker-homeassistant/actions/workflows/external_trigger.yml"' \n"}],
+            "username": "Github Actions"}' ${{ secrets.DISCORD_WEBHOOK }}

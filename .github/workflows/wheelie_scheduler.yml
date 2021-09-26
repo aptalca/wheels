@@ -54,6 +54,11 @@ jobs:
               https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie_HA.yml/runs)
             if echo "${response}" | jq -r '.workflow_runs[].conclusion' | grep -q null || echo "${response2}" | jq -r '.workflow_runs[].conclusion' | grep -q null; then
               echo "**** New packages are available but there is already an active Wheelie build, skipping ****"
+              echo "**** Notifying Discord ****"
+              FAILURE_REASON="New packages are available but there is already an active Wheelie build, skipping."
+              curl -X POST -H "Content-Type: application/json" --data '{"avatar_url": "https://cdn.discordapp.com/avatars/354986384542662657/df91181b3f1cf0ef1592fbe18e0962d7.png","embeds": [{"color": 9802903,
+                "description": "**Trigger Failed** \n**Reason:** '"${FAILURE_REASON}"' \n"}],
+                "username": "Github Actions"}' ${{ secrets.DISCORD_WEBHOOK }}
             else            
               echo "**** Triggering wheelie for packages: ${PACKAGES}****"
               curl -iX POST \
@@ -61,6 +66,11 @@ jobs:
                 -H "Accept: application/vnd.github.v3+json" \
                 -d "{\"ref\":\"refs/heads/main\",\"inputs\":{\"PACKAGES\":\"${PACKAGES}\"}}" \
                 https://api.github.com/repos/aptalca/wheels/actions/workflows/wheelie.yml/dispatches
+              echo "**** Notifying discord ****"
+              TRIGGER_REASON="**** Triggering wheelie for packages: ${PACKAGES} ****"
+              curl -X POST -H "Content-Type: application/json" --data '{"avatar_url": "https://cdn.discordapp.com/avatars/354986384542662657/df91181b3f1cf0ef1592fbe18e0962d7.png","embeds": [{"color": 9802903,
+                "description": "**Build Triggered** \n**Reason:** '"${TRIGGER_REASON}"' \n**Build URL:** '"https://github.com/aptalca/wheels/actions/workflows/wheelie.yml"' \n"}],
+                "username": "Github Actions"}' ${{ secrets.DISCORD_WEBHOOK }}
             fi
           else
             echo "**** No new updates to any of the packages, skipping trigger ****"
