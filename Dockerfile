@@ -33,7 +33,6 @@ RUN \
       g++ \
       gcc \
       jpeg-dev \
-      lapack-dev \
       libffi-dev \
       libxml2-dev \
       libxslt-dev \
