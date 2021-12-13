@@ -17,9 +17,9 @@ jobs:
           export HASS_RELEASE=$(curl -sfX GET https://api.github.com/repos/home-assistant/core/releases/latest \
             | jq -r .tag_name)
           echo "HASS_RELEASE is ${HASS_RELEASE}"
-          export HASS_BASE=$(curl -sfL https://raw.githubusercontent.com/home-assistant/core/${HASS_RELEASE}/build.json \
-            | jq -r .build_from.amd64 \
-            | cut -d: -f2)
+          export HASS_BASE=$(curl -sfL https://raw.githubusercontent.com/home-assistant/core/${HASS_RELEASE}/build.yaml \
+            | grep 'amd64: ' \
+            | cut -d: -f3)
           echo "HASS_BASE is ${HASS_BASE}"
           echo "Downloading upstream requirements files. . ."
           mkdir -p upstream

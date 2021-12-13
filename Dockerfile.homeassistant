@@ -62,9 +62,9 @@ RUN \
   tar xf \
     /tmp/core.tar.gz -C \
     /tmp/core --strip-components=1 && \
-  export HASS_BASE=$(cat /tmp/core/build.json \
-    | jq -r .build_from.amd64 \
-    | cut -d: -f2) && \
+  export HASS_BASE=$(cat /tmp/core/build.yaml \
+    | grep 'amd64: ' \
+    | cut -d: -f3) && \
   echo "**** Updating pip and building wheels ****" && \
   pip3 install -U pip==20.2 setuptools==57.5.0 wheel cython && \
   mkdir -p /build && \
