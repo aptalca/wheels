@@ -1,4 +1,4 @@
-# syntax = docker/dockerfile:experimental
+# syntax = docker/dockerfile:labs
 
 ARG DISTRO
 ARG DISTROVER
@@ -50,7 +50,7 @@ RUN \
   pip3 install -U pip setuptools wheel
 
 RUN \
-  --security=insecure mkdir -p /root/.cargo && chmod 777 /root/.cargo && mount -t tmpfs none /root/.cargo && \
+  --security=insecure mkdir -p /root/.cargo && chmod 777 /root/.cargo && mount -t tmpfs none /root/.cargo && df -h && \
   mkdir -p /build && \
   if [ -z "${PACKAGES}" ]; then \
     PACKAGES=$(cat /packages.txt); \
