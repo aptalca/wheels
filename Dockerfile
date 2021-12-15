@@ -49,7 +49,7 @@ RUN \
   echo "**** Updating pip and building wheels ****" && \
   pip3 install -U pip setuptools wheel
 
-COPY github.com-1285ae84e5963aae /root/.cargo/registry/index/
+COPY github.com-1285ae84e5963aae/ /root/.cargo/registry/index/github.com-1285ae84e5963aae/
 
 RUN \
   mkdir -p /build && \
