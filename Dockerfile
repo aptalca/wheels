@@ -17,6 +17,7 @@ RUN \
     apt-get install --no-install-recommends -y \
       cargo \
       g++ \
+      git \
       libffi-dev \
       libjpeg-dev \
       libssl-dev \
@@ -32,6 +33,7 @@ RUN \
       cargo \
       g++ \
       gcc \
+      git \
       jpeg-dev \
       libffi-dev \
       libxml2-dev \
@@ -49,6 +51,9 @@ RUN \
 
 RUN \
   mkdir -p /build && \
+  mkdir -p /root/.cargo/registry/index && \
+  cd /root/.cargo/registry/index && \
+  git clone --bare https://github.com/rust-lang/crates.io-index.git github.com-1285ae84e5963aae && \
   if [ -z "${PACKAGES}" ]; then \
     PACKAGES=$(cat /packages.txt); \
   fi && \
