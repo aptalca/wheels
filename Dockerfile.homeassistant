@@ -50,6 +50,8 @@ RUN \
     python3 \
     tiff
 
+COPY github.com-1285ae84e5963aae/ /root/.cargo/registry/index/github.com-1285ae84e5963aae/
+
 RUN \
   echo "**** retrieve homeassistant ****" && \
   mkdir -p \

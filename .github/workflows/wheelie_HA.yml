@@ -47,7 +47,7 @@ jobs:
         run: |
           df -h
           sudo swapon --show
-          sudo dd if=/dev/zero of=/swapfile1 bs=1M count=6K 
+          sudo dd if=/dev/zero of=/swapfile1 bs=1M count=8K 
           sudo chmod 600 /swapfile1
           sudo mkswap /swapfile1
           sudo swapon /swapfile1
@@ -73,12 +73,16 @@ jobs:
           esac
           if [ -n "${QEMU_ARCH}" ]; then
             docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-            #docker rm $(docker create --volume qemu-user-static:/usr/bin multiarch/qemu-user-static:${QEMU_ARCH} dummy)
-            #docker run --rm --privileged --volume qemu-user-static:/usr/bin:ro multiarch/qemu-user-static:register --persistent yes
           fi
 
       - name: Build wheels in image
         run: |
+          if [ "${{ matrix.arch }}" == "arm32v7" ]; then
+            echo "arm32 build detected, cloning crates.io index"
+            git clone --bare https://github.com/rust-lang/crates.io-index.git github.com-1285ae84e5963aae
+          else
+            mkdir -p github.com-1285ae84e5963aae
+          fi
           docker build -t ${{ matrix.arch }} --build-arg ARCH=${{ matrix.arch }} -f Dockerfile.homeassistant .
           docker create --name ${{ matrix.arch }} ${{ matrix.arch }}
           mkdir -p build
