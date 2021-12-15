@@ -49,11 +49,10 @@ RUN \
   echo "**** Updating pip and building wheels ****" && \
   pip3 install -U pip setuptools wheel
 
+COPY github.com-1285ae84e5963aae /root/.cargo/registry/index/
+
 RUN \
   mkdir -p /build && \
-  mkdir -p /root/.cargo/registry/index && \
-  cd /root/.cargo/registry/index && \
-  git clone --bare https://github.com/rust-lang/crates.io-index.git github.com-1285ae84e5963aae && \
   if [ -z "${PACKAGES}" ]; then \
     PACKAGES=$(cat /packages.txt); \
   fi && \

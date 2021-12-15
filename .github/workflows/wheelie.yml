@@ -38,14 +38,14 @@ jobs:
         run: |
           df -h
           sudo swapon --show
-          sudo dd if=/dev/zero of=/swapfile1 bs=1M count=16K 
+          sudo dd if=/dev/zero of=/swapfile1 bs=1M count=8K 
           sudo chmod 600 /swapfile1
           sudo mkswap /swapfile1
           sudo swapon /swapfile1
           sudo swapon --show
           sudo free -h
           sudo systemctl stop docker
-          sudo mount -t tmpfs -o size=16G tmpfs /var/lib/docker
+          sudo mount -t tmpfs -o size=7G tmpfs /var/lib/docker
           df -h
           sudo systemctl start docker
 
@@ -72,6 +72,12 @@ jobs:
         run: |
           DISTRO=$(echo ${{ matrix.os }} | awk -F'-' '{print $1}')
           DISTROVER=$(echo ${{ matrix.os }} | awk -F'-' '{print $2}')
+          if [ "${{ matrix.arch }}" == "arm32v7" ]; then
+            echo "arm32 build detected, cloning crates.io index"
+            git clone --bare https://github.com/rust-lang/crates.io-index.git github.com-1285ae84e5963aae
+          else
+            mkdir -p github.com-1285ae84e5963aae
+          fi
           docker build -t ${{ matrix.os }}-${{ matrix.arch }} --build-arg DISTRO=${DISTRO} --build-arg DISTROVER=${DISTROVER} --build-arg ARCH=${{ matrix.arch }} --build-arg PACKAGES="${{ github.event.inputs.PACKAGES }}" .
           docker create --name ${{ matrix.os }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.arch }}
           mkdir -p build
