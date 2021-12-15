@@ -33,22 +33,6 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v2
 
-      # https://github.com/crazy-max/ghaction-docker-buildx/issues/172
-      - name: Hack Docker FS to Build cryptography on armv6/armv7
-        run: |
-          df -h
-          sudo swapon --show
-          sudo dd if=/dev/zero of=/swapfile1 bs=1M count=8K 
-          sudo chmod 600 /swapfile1
-          sudo mkswap /swapfile1
-          sudo swapon /swapfile1
-          sudo swapon --show
-          sudo free -h
-          sudo systemctl stop docker
-          sudo mount -t tmpfs -o size=14G tmpfs /var/lib/docker
-          df -h
-          sudo systemctl start docker
-
       - name: Set up qemu
         run: |
           case ${{ matrix.arch }} in
@@ -70,8 +54,19 @@ jobs:
         run: |
           DISTRO=$(echo ${{ matrix.os }} | awk -F'-' '{print $1}')
           DISTROVER=$(echo ${{ matrix.os }} | awk -F'-' '{print $2}')
+          case ${{ matrix.arch }} in
+            amd64)
+              BUILDX_ARCH="linux/amd64"
+              ;;
+            arm32v7)
+              BUILDX_ARCH="linux/arm/v7"
+              ;;
+            arm64v8)
+              BUILDX_ARCH="linux/arm64"
+              ;;
+          esac
           DOCKER_BUILDKIT=1 docker buildx create --use --name insecure-builder --buildkitd-flags '--allow-insecure-entitlement security.insecure'
-          DOCKER_BUILDKIT=1 docker buildx build --allow security.insecure -t ${{ matrix.os }}-${{ matrix.arch }} --load --build-arg DISTRO=${DISTRO} --build-arg DISTROVER=${DISTROVER} --build-arg ARCH=${{ matrix.arch }} --build-arg PACKAGES="${{ github.event.inputs.PACKAGES }}" .
+          DOCKER_BUILDKIT=1 docker buildx build --allow security.insecure --platform=${BUILDX_ARCH} -t ${{ matrix.os }}-${{ matrix.arch }} --load --build-arg DISTRO=${DISTRO} --build-arg DISTROVER=${DISTROVER} --build-arg ARCH=${{ matrix.arch }} --build-arg PACKAGES="${{ github.event.inputs.PACKAGES }}" .
           docker create --name ${{ matrix.os }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.arch }}
           mkdir -p build
           docker cp ${{ matrix.os }}-${{ matrix.arch }}:/build build
