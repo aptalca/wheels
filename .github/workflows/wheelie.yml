@@ -72,7 +72,7 @@ jobs:
         run: |
           DISTRO=$(echo ${{ matrix.os }} | awk -F'-' '{print $1}')
           DISTROVER=$(echo ${{ matrix.os }} | awk -F'-' '{print $2}')
-          DOCKER_BUILDKIT=1 docker build -t ${{ matrix.os }}-${{ matrix.arch }} --build-arg DISTRO=${DISTRO} --build-arg DISTROVER=${DISTROVER} --build-arg ARCH=${{ matrix.arch }} --build-arg PACKAGES="${{ github.event.inputs.PACKAGES }}" .
+          DOCKER_BUILDKIT=1 DOCKER_CLI_EXPERIMENTAL=enabled docker build -t ${{ matrix.os }}-${{ matrix.arch }} --build-arg DISTRO=${DISTRO} --build-arg DISTROVER=${DISTROVER} --build-arg ARCH=${{ matrix.arch }} --build-arg PACKAGES="${{ github.event.inputs.PACKAGES }}" .
           docker create --name ${{ matrix.os }}-${{ matrix.arch }} ${{ matrix.os }}-${{ matrix.arch }}
           mkdir -p build
           docker cp ${{ matrix.os }}-${{ matrix.arch }}:/build build
