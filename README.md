@@ -1,3 +1,6 @@
+# This project has moved to https://github.com/linuxserver/wheelie
+
+
 # Wheelie
 
 This repo builds and uploads wheels for pip packages commonly used in linuxserver.io images.
